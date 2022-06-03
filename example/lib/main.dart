@@ -29,6 +29,16 @@ class MyApp extends StatelessWidget {
       home: Scaffold(
           appBar: AppBar(title: Text('Upgrader Example')),
           body: UpgradeAlert(
+            upgrader: Upgrader(
+              durationUntilAlertAgain: const Duration(seconds: 0),
+              dialogStyle: UpgradeDialogStyle.cupertino,
+              validusVersionUrl:
+                  "https://run.mocky.io/v3/16e473e6-3923-45a7-b630-5422a107e3db",
+              onUpdate: (force) {
+                print('is force update $force');
+                return true;
+              },
+            ),
             child: Center(child: Text('Checking...')),
           )),
     );

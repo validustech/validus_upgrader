@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:upgrader/src/validus_search_api.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:version/version.dart';
 
@@ -102,7 +103,7 @@ class Upgrader {
 
   /// Called when the update button is tapped or otherwise activated.
   /// Return false when the default behavior should not execute.
-  BoolCallback? onUpdate;
+  bool Function(bool)? onUpdate;
 
   /// The target platform.
   final TargetPlatform platform;
@@ -129,6 +130,12 @@ class Upgrader {
 
   /// The target operating system.
   final String operatingSystem = UpgradeIO.operatingSystem;
+
+  /// AWS url
+  String? validusVersionUrl;
+
+  /// Show/hide promt
+  bool? showPromptMessage;
 
   bool _displayed = false;
   bool _initCalled = false;
@@ -169,12 +176,12 @@ class Upgrader {
     this.countryCode,
     this.minAppVersion,
     this.dialogStyle = UpgradeDialogStyle.material,
+    this.validusVersionUrl,
+    this.showPromptMessage,
     TargetPlatform? platform,
   })  : client = client ?? http.Client(),
         messages = messages ?? UpgraderMessages(),
-        platform = platform ?? defaultTargetPlatform {
-    print("upgrader: instantiated."); // TODO: remove this!
-  }
+        platform = platform ?? defaultTargetPlatform {}
 
   /// A shared instance of [Upgrader].
   static get sharedInstance => _sharedInstance;
@@ -278,24 +285,19 @@ class Upgrader {
         print('upgrader: countryCode: $country');
       }
 
-      // Get Android version from Google Play Store, or
-      // get iOS version from iTunes Store.
-      if (platform == TargetPlatform.android) {
-        await _getAndroidStoreVersion();
-      } else if (platform == TargetPlatform.iOS) {
-        final iTunes = ITunesSearchAPI();
-        iTunes.client = client;
-        final response = await (iTunes
-            .lookupByBundleId(_packageInfo!.packageName, country: country));
+      // get iOS version from AWS.
+      if (platform == TargetPlatform.iOS && validusVersionUrl != null) {
+        final api = ValidusSearchAPI();
+        api.client = client;
+        final response = await (api.lookupByAws(validusVersionUrl!));
 
         if (response != null) {
-          _appStoreVersion ??= ITunesResults.version(response);
-          _appStoreListingURL ??= ITunesResults.trackViewUrl(response);
-          _releaseNotes ??= ITunesResults.releaseNotes(response);
-          final mav = ITunesResults.minAppVersion(response);
+          _appStoreVersion ??= ValidusVersionResult.version(response);
+          _appStoreListingURL ??=
+              ValidusVersionResult.appStoreListingURL(response);
+          final mav = ValidusVersionResult.minAppVersion(response);
           if (mav != null) {
             minAppVersion = mav.toString();
-            print('upgrader: ITunesResults.minAppVersion: $minAppVersion');
           }
         }
       }
@@ -598,9 +600,10 @@ class Upgrader {
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
           Text(message),
-          Padding(
-              padding: const EdgeInsets.only(top: 15.0),
-              child: Text(messages.message(UpgraderMessage.prompt)!)),
+          if (showPromptMessage == null && showPromptMessage == true)
+            Padding(
+                padding: const EdgeInsets.only(top: 15.0),
+                child: Text(messages.message(UpgraderMessage.prompt)!)),
           if (notes != null) notes,
         ],
       )),
@@ -645,9 +648,10 @@ class Upgrader {
         mainAxisAlignment: MainAxisAlignment.start,
         children: <Widget>[
           Text(message),
-          Padding(
-              padding: const EdgeInsets.only(top: 15.0),
-              child: Text(messages.message(UpgraderMessage.prompt)!)),
+          if (showPromptMessage == null && showPromptMessage == true)
+            Padding(
+                padding: const EdgeInsets.only(top: 15.0),
+                child: Text(messages.message(UpgraderMessage.prompt)!)),
           if (notes != null) notes,
         ],
       ),
@@ -714,7 +718,7 @@ class Upgrader {
     // If this callback has been provided, call it.
     var doProcess = true;
     if (onUpdate != null) {
-      doProcess = onUpdate!();
+      doProcess = onUpdate!(!shouldPop);
     }
 
     if (doProcess) {

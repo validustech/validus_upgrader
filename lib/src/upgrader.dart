@@ -134,8 +134,8 @@ class Upgrader {
   /// AWS url
   String? validusVersionUrl;
 
-  /// Show/hide promt
-  bool? showPromptMessage;
+  /// Show/hide promt message line
+  bool? showPromptMessageLine;
 
   bool _displayed = false;
   bool _initCalled = false;
@@ -177,7 +177,7 @@ class Upgrader {
     this.minAppVersion,
     this.dialogStyle = UpgradeDialogStyle.material,
     this.validusVersionUrl,
-    this.showPromptMessage,
+    this.showPromptMessageLine,
     TargetPlatform? platform,
   })  : client = client ?? http.Client(),
         messages = messages ?? UpgraderMessages(),
@@ -600,7 +600,7 @@ class Upgrader {
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
           Text(message),
-          if (showPromptMessage == null && showPromptMessage == true)
+          if (showPromptMessageLine == null && showPromptMessageLine == true)
             Padding(
                 padding: const EdgeInsets.only(top: 15.0),
                 child: Text(messages.message(UpgraderMessage.prompt)!)),
@@ -648,7 +648,7 @@ class Upgrader {
         mainAxisAlignment: MainAxisAlignment.start,
         children: <Widget>[
           Text(message),
-          if (showPromptMessage == null && showPromptMessage == true)
+          if (showPromptMessageLine == null && showPromptMessageLine == true)
             Padding(
                 padding: const EdgeInsets.only(top: 15.0),
                 child: Text(messages.message(UpgraderMessage.prompt)!)),

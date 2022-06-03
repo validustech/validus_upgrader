@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:upgrader/src/validus_search_api.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:version/version.dart';
 
@@ -133,6 +134,12 @@ class Upgrader {
   /// The target operating system.
   final String operatingSystem = UpgradeIO.operatingSystem;
 
+  /// AWS url
+  String? validusVersionUrl;
+
+  /// Show/hide promt message line
+  bool? showPromptMessageLine;
+
   bool _displayed = false;
   bool _initCalled = false;
   PackageInfo? _packageInfo;
@@ -173,6 +180,8 @@ class Upgrader {
     this.languageCode,
     this.minAppVersion,
     this.dialogStyle = UpgradeDialogStyle.material,
+    this.validusVersionUrl,
+    this.showPromptMessageLine,
     TargetPlatform? platform,
   })  : client = client ?? http.Client(),
         messages = messages ?? UpgraderMessages(),
@@ -288,26 +297,25 @@ class Upgrader {
         print('upgrader: languageCode: $language');
       }
 
-      // Get Android version from Google Play Store, or
-      // get iOS version from iTunes Store.
-      if (platform == TargetPlatform.android) {
-        await _getAndroidStoreVersion(country: country, language: language);
-      } else if (platform == TargetPlatform.iOS) {
-        final iTunes = ITunesSearchAPI();
-        iTunes.client = client;
-        final response = await (iTunes
-            .lookupByBundleId(_packageInfo!.packageName, country: country));
+      // Get version data from AWS S3 Url.
+      if (validusVersionUrl != null) {
+        final api = ValidusSearchAPI();
+        api.client = client;
+        final response = await (api.lookupByAws(validusVersionUrl!));
 
         if (response != null) {
-          _appStoreVersion ??= ITunesResults.version(response);
-          _appStoreListingURL ??= ITunesResults.trackViewUrl(response);
-          _releaseNotes ??= ITunesResults.releaseNotes(response);
-          final mav = ITunesResults.minAppVersion(response);
+          _appStoreVersion ??= ValidusVersionResult.version(response);
+          if (platform == TargetPlatform.iOS) {
+            _appStoreListingURL ??=
+                ValidusVersionResult.appStoreListingURL(response);
+          } else if (platform == TargetPlatform.android) {
+            final id = _packageInfo!.packageName;
+            final playStore = PlayStoreSearchAPI();
+            _appStoreListingURL ??= playStore.lookupURLById(id);
+          }
+          final mav = ValidusVersionResult.minAppVersion(response);
           if (mav != null) {
             minAppVersion = mav.toString();
-            if (debugLogging) {
-              print('upgrader: ITunesResults.minAppVersion: $minAppVersion');
-            }
           }
         }
       }

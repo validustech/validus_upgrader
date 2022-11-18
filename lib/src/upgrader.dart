@@ -285,8 +285,8 @@ class Upgrader {
         print('upgrader: countryCode: $country');
       }
 
-      // get iOS version from AWS.
-      if (platform == TargetPlatform.iOS && validusVersionUrl != null) {
+      // Get version data from AWS S3 Url.
+      if (validusVersionUrl != null) {
         final api = ValidusSearchAPI();
         api.client = client;
         final response = await (api.lookupByAws(validusVersionUrl!));

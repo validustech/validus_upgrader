@@ -293,8 +293,13 @@ class Upgrader {
 
         if (response != null) {
           _appStoreVersion ??= ValidusVersionResult.version(response);
-          _appStoreListingURL ??=
-              ValidusVersionResult.appStoreListingURL(response);
+          if (platform == TargetPlatform.iOS) {
+            _appStoreListingURL ??= ValidusVersionResult.appStoreListingURL(response);
+          } else if (platform == TargetPlatform.android) {
+            final id = _packageInfo!.packageName;
+            final playStore = PlayStoreSearchAPI();
+            _appStoreListingURL ??= playStore.lookupURLById(id);
+          }
           final mav = ValidusVersionResult.minAppVersion(response);
           if (mav != null) {
             minAppVersion = mav.toString();

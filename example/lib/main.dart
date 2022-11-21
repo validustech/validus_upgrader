@@ -33,7 +33,7 @@ class MyApp extends StatelessWidget {
               durationUntilAlertAgain: const Duration(seconds: 0),
               dialogStyle: UpgradeDialogStyle.cupertino,
               validusVersionUrl:
-                  "https://run.mocky.io/v3/16e473e6-3923-45a7-b630-5422a107e3db",
+                  'https://run.mocky.io/v3/16e473e6-3923-45a7-b630-5422a107e3db',
               onUpdate: (force) {
                 print('is force update $force');
                 return true;

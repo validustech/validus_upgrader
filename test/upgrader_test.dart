@@ -112,7 +112,7 @@ void main() {
 
     var called = false;
     var notCalled = true;
-    upgrader.onUpdate = () {
+    upgrader.onUpdate = (bool value) {
       called = true;
       return true;
     };
@@ -189,7 +189,7 @@ void main() {
 
     var called = false;
     var notCalled = true;
-    upgrader.onUpdate = () {
+    upgrader.onUpdate = (bool value) {
       called = true;
       return true;
     };
@@ -265,7 +265,7 @@ void main() {
       called = true;
       return true;
     };
-    upgrader.onUpdate = () {
+    upgrader.onUpdate = (bool value) {
       notCalled = false;
       return true;
     };
@@ -311,7 +311,7 @@ void main() {
       notCalled = false;
       return true;
     };
-    upgrader.onUpdate = () {
+    upgrader.onUpdate = (bool value) {
       notCalled = false;
       return true;
     };
@@ -381,7 +381,7 @@ void main() {
 
     var called = false;
     var notCalled = true;
-    upgrader.onUpdate = () {
+    upgrader.onUpdate = (bool value) {
       called = true;
       return true;
     };
@@ -434,7 +434,7 @@ void main() {
       notCalled = false;
       return true;
     };
-    upgrader.onUpdate = () {
+    upgrader.onUpdate = (bool value) {
       notCalled = false;
       return true;
     };
@@ -477,7 +477,7 @@ void main() {
       notCalled = false;
       return true;
     };
-    upgrader.onUpdate = () {
+    upgrader.onUpdate = (bool value) {
       notCalled = false;
       return true;
     };
@@ -603,7 +603,7 @@ void main() {
       notCalled = false;
       return true;
     };
-    upgrader.onUpdate = () {
+    upgrader.onUpdate = (bool value) {
       notCalled = false;
       return true;
     };

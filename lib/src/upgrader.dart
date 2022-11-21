@@ -15,7 +15,6 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:version/version.dart';
 
 import 'appcast.dart';
-import 'itunes_search_api.dart';
 import 'play_store_search_api.dart';
 import 'upgrade_io.dart';
 import 'upgrade_messages.dart';
@@ -181,7 +180,7 @@ class Upgrader {
     TargetPlatform? platform,
   })  : client = client ?? http.Client(),
         messages = messages ?? UpgraderMessages(),
-        platform = platform ?? defaultTargetPlatform {}
+        platform = platform ?? defaultTargetPlatform;
 
   /// A shared instance of [Upgrader].
   static get sharedInstance => _sharedInstance;

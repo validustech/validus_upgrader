@@ -284,16 +284,21 @@ class Upgrader {
         print('upgrader: countryCode: $country');
       }
 
-      // get iOS version from AWS.
-      if (platform == TargetPlatform.iOS && validusVersionUrl != null) {
+      // Get version data from AWS S3 Url.
+      if (validusVersionUrl != null) {
         final api = ValidusSearchAPI();
         api.client = client;
         final response = await (api.lookupByAws(validusVersionUrl!));
 
         if (response != null) {
           _appStoreVersion ??= ValidusVersionResult.version(response);
-          _appStoreListingURL ??=
-              ValidusVersionResult.appStoreListingURL(response);
+          if (platform == TargetPlatform.iOS) {
+            _appStoreListingURL ??= ValidusVersionResult.appStoreListingURL(response);
+          } else if (platform == TargetPlatform.android) {
+            final id = _packageInfo!.packageName;
+            final playStore = PlayStoreSearchAPI();
+            _appStoreListingURL ??= playStore.lookupURLById(id);
+          }
           final mav = ValidusVersionResult.minAppVersion(response);
           if (mav != null) {
             minAppVersion = mav.toString();

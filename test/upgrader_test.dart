@@ -103,7 +103,7 @@ void main() {
     upgrader.onUpdate = () {
       called = true;
       return true;
-    };
+    } as bool Function(bool p1)?;
     upgrader.onIgnore = () {
       notCalled = false;
       return true;
@@ -180,7 +180,7 @@ void main() {
     upgrader.onUpdate = () {
       called = true;
       return true;
-    };
+    } as bool Function(bool p1)?;
     upgrader.onIgnore = () {
       notCalled = false;
       return true;
@@ -256,7 +256,7 @@ void main() {
     upgrader.onUpdate = () {
       notCalled = false;
       return true;
-    };
+    } as bool Function(bool p1)?;
     upgrader.onLater = () {
       notCalled = false;
       return true;
@@ -302,7 +302,7 @@ void main() {
     upgrader.onUpdate = () {
       notCalled = false;
       return true;
-    };
+    } as bool Function(bool p1)?;
 
     expect(upgrader.isTooSoon(), false);
 
@@ -372,7 +372,7 @@ void main() {
     upgrader.onUpdate = () {
       called = true;
       return true;
-    };
+    } as bool Function(bool p1)?;
     upgrader.onLater = () {
       notCalled = false;
       return true;
@@ -425,7 +425,7 @@ void main() {
     upgrader.onUpdate = () {
       notCalled = false;
       return true;
-    };
+    } as bool Function(bool p1)?;
 
     expect(upgrader.isTooSoon(), false);
 
@@ -468,7 +468,7 @@ void main() {
     upgrader.onUpdate = () {
       notCalled = false;
       return true;
-    };
+    } as bool Function(bool p1)?;
 
     expect(upgrader.isTooSoon(), false);
 
@@ -595,7 +595,7 @@ void main() {
     upgrader.onUpdate = () {
       notCalled = false;
       return true;
-    };
+    } as bool Function(bool p1)?;
 
     expect(upgrader.isTooSoon(), false);
 

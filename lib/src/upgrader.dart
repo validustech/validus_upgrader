@@ -50,7 +50,7 @@ class AppcastConfiguration {
 }
 
 /// Creates a shared instance of [Upgrader].
-late Upgrader _sharedInstance = Upgrader();
+Upgrader _sharedInstance = Upgrader();
 
 /// A class to configure the upgrade dialog.
 class Upgrader {
@@ -67,8 +67,11 @@ class Upgrader {
   /// Provide an HTTP Client that can be replaced for mock testing.
   final http.Client client;
 
-  /// The country code that will override the system locale. Optional. Used only for iOS.
+  /// The country code that will override the system locale. Optional.
   final String? countryCode;
+
+  /// The country code that will override the system locale. Optional. Used only for Android.
+  final String? languageCode;
 
   /// For debugging, always force the upgrade to be available.
   bool debugDisplayAlways;
@@ -167,17 +170,18 @@ class Upgrader {
     this.showReleaseNotes = true,
     this.canDismissDialog = false,
     this.countryCode,
+    this.languageCode,
     this.minAppVersion,
     this.dialogStyle = UpgradeDialogStyle.material,
     TargetPlatform? platform,
   })  : client = client ?? http.Client(),
         messages = messages ?? UpgraderMessages(),
         platform = platform ?? defaultTargetPlatform {
-    print("upgrader: instantiated."); // TODO: remove this!
+    if (debugLogging) print("upgrader: instantiated.");
   }
 
   /// A shared instance of [Upgrader].
-  static get sharedInstance => _sharedInstance;
+  static Upgrader get sharedInstance => _sharedInstance;
 
   void installPackageInfo({PackageInfo? packageInfo}) {
     _packageInfo = packageInfo;
@@ -278,10 +282,16 @@ class Upgrader {
         print('upgrader: countryCode: $country');
       }
 
+      // The  language code of the locale, defaulting to `en`.
+      final language = languageCode ?? findLanguageCode();
+      if (debugLogging) {
+        print('upgrader: languageCode: $language');
+      }
+
       // Get Android version from Google Play Store, or
       // get iOS version from iTunes Store.
       if (platform == TargetPlatform.android) {
-        await _getAndroidStoreVersion();
+        await _getAndroidStoreVersion(country: country, language: language);
       } else if (platform == TargetPlatform.iOS) {
         final iTunes = ITunesSearchAPI();
         iTunes.client = client;
@@ -295,7 +305,9 @@ class Upgrader {
           final mav = ITunesResults.minAppVersion(response);
           if (mav != null) {
             minAppVersion = mav.toString();
-            print('upgrader: ITunesResults.minAppVersion: $minAppVersion');
+            if (debugLogging) {
+              print('upgrader: ITunesResults.minAppVersion: $minAppVersion');
+            }
           }
         }
       }
@@ -305,19 +317,23 @@ class Upgrader {
   }
 
   /// Android info is fetched by parsing the html of the app store page.
-  Future<bool?> _getAndroidStoreVersion() async {
+  Future<bool?> _getAndroidStoreVersion(
+      {String? country, String? language}) async {
     final id = _packageInfo!.packageName;
-    final playStore = PlayStoreSearchAPI();
-    playStore.client = client;
-    final response = await (playStore.lookupById(id));
+    final playStore = PlayStoreSearchAPI(client: client);
+    final response =
+        await (playStore.lookupById(id, country: country, language: language));
     if (response != null) {
       _appStoreVersion ??= PlayStoreResults.version(response);
-      _appStoreListingURL ??= playStore.lookupURLById(id);
+      _appStoreListingURL ??=
+          playStore.lookupURLById(id, language: language, country: country);
       _releaseNotes ??= PlayStoreResults.releaseNotes(response);
       final mav = PlayStoreResults.minAppVersion(response);
       if (mav != null) {
         minAppVersion = mav.toString();
-        print('upgrader: PlayStoreResults.minAppVersion: $minAppVersion');
+        if (debugLogging) {
+          print('upgrader: PlayStoreResults.minAppVersion: $minAppVersion');
+        }
       }
     }
 
@@ -483,23 +499,24 @@ class Upgrader {
       print('upgrader: minAppVersion: $minAppVersion');
     }
     if (_appStoreVersion == null || _installedVersion == null) {
-      if (debugLogging) {
-        print('upgrader: isUpdateAvailable: false');
-      }
+      if (debugLogging) print('upgrader: isUpdateAvailable: false');
       return false;
     }
 
     if (_updateAvailable == null) {
-      final appStoreVersion = Version.parse(_appStoreVersion!);
-      final installedVersion = Version.parse(_installedVersion!);
+      try {
+        final appStoreVersion = Version.parse(_appStoreVersion!);
+        final installedVersion = Version.parse(_installedVersion!);
 
-      final available = appStoreVersion > installedVersion;
-      _updateAvailable = available ? _appStoreVersion : null;
+        final available = appStoreVersion > installedVersion;
+        _updateAvailable = available ? _appStoreVersion : null;
+      } on Exception catch (e) {
+        print('upgrader: isUpdateAvailable: $e');
+      }
     }
-    if (debugLogging) {
-      print('upgrader: isUpdateAvailable: ${_updateAvailable != null}');
-    }
-    return _updateAvailable != null;
+    final isAvailable = _updateAvailable != null;
+    if (debugLogging) print('upgrader: isUpdateAvailable: $isAvailable');
+    return isAvailable;
   }
 
   bool shouldDisplayReleaseNotes() {
@@ -520,6 +537,21 @@ class Upgrader {
     final code = locale == null || locale.countryCode == null
         ? 'US'
         : locale.countryCode;
+    return code;
+  }
+
+  /// Determine the current language code, either from the context, or
+  /// from the system-reported default locale of the device. The default
+  /// is `en`.
+  String? findLanguageCode({BuildContext? context}) {
+    Locale? locale;
+    if (context != null) {
+      locale = Localizations.maybeLocaleOf(context);
+    } else {
+      // Get the system locale
+      locale = ambiguate(WidgetsBinding.instance)!.window.locale;
+    }
+    final code = locale == null ? 'en' : locale.languageCode;
     return code;
   }
 
@@ -591,7 +623,7 @@ class Upgrader {
           ));
     }
     return AlertDialog(
-      title: Text(title),
+      title: Text(title, key: const Key('upgrader.dialog.title')),
       content: SingleChildScrollView(
           child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -754,7 +786,7 @@ class Upgrader {
     await prefs.setString('lastTimeAlerted', _lastTimeAlerted.toString());
 
     _lastVersionAlerted = _appStoreVersion;
-    await prefs.setString('lastVersionAlerted', _lastVersionAlerted!);
+    await prefs.setString('lastVersionAlerted', _lastVersionAlerted ?? '');
 
     _hasAlerted = true;
     return true;
@@ -788,7 +820,10 @@ class Upgrader {
 
     if (await canLaunchUrl(Uri.parse(_appStoreListingURL!))) {
       try {
-        await launchUrl(Uri.parse(_appStoreListingURL!));
+        await launchUrl(Uri.parse(_appStoreListingURL!),
+            mode: UpgradeIO.isAndroid
+                ? LaunchMode.externalNonBrowserApplication
+                : LaunchMode.platformDefault);
       } catch (e) {
         if (debugLogging) {
           print('upgrader: launch to app store failed: $e');

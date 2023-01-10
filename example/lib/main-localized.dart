@@ -2,8 +2,8 @@
  * Copyright (c) 2020-2022 Larry Aasen. All rights reserved.
  */
 
-import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show SynchronousFuture;
+import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:upgrader/upgrader.dart';
 
@@ -21,7 +21,7 @@ void main() async {
 }
 
 class Demo extends StatelessWidget {
-  Demo({Key key}) : super(key: key);
+  Demo({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -38,12 +38,15 @@ class Demo extends StatelessWidget {
         const Locale('en', ''), // English, no country code
         const Locale('ar', ''), // Arabic, no country code
         const Locale('bn', ''), // Bengali, no country code
+        const Locale('da', ''), // Danish, no country code
         const Locale('es', ''), // Spanish, no country code
         const Locale('fa', ''), // Persian, no country code
         const Locale('fil', ''), // Filipino, no country code
         const Locale('fr', ''), // French, no country code
         const Locale('de', ''), // German, no country code
         const Locale('el', ''), // Greek, no country code
+        const Locale('he', ''), // Hebrew, no country code
+        const Locale('hi', ''), // Hindi, no country code
         const Locale('ht', ''), // Haitian Creole, no country code
         const Locale('hu', ''), // Hungarian, no country code
         const Locale('id', ''), // Indonesian, no country code
@@ -61,9 +64,11 @@ class Demo extends StatelessWidget {
         const Locale('ru', ''), // Russian, no country code
         const Locale('sv', ''), // Swedish, no country code
         const Locale('ta', ''), // Tamil, no country code
+        const Locale('te', ''), // Telugu, no country code
         const Locale('tr', ''), // Turkish, no country code
         const Locale('uk', ''), // Ukrainian, no country code
         const Locale('vi', ''), // Vietnamese, no country code
+        const Locale('zh', ''), // Chinese, no country code
       ],
     );
   }
@@ -95,7 +100,7 @@ class DemoLocalizations {
   final Locale locale;
 
   static DemoLocalizations of(BuildContext context) {
-    return Localizations.of<DemoLocalizations>(context, DemoLocalizations);
+    return Localizations.of<DemoLocalizations>(context, DemoLocalizations)!;
   }
 
   static final Map<String, Map<String, String>> _localizedValues = {
@@ -110,11 +115,11 @@ class DemoLocalizations {
   };
 
   String get checking {
-    return _localizedValues[locale.languageCode]['checking'];
+    return _localizedValues[locale.languageCode]!['checking']!;
   }
 
   String get title {
-    return _localizedValues[locale.languageCode]['title'];
+    return _localizedValues[locale.languageCode]!['title']!;
   }
 }
 
@@ -127,12 +132,15 @@ class DemoLocalizationsDelegate
         'en',
         'ar',
         'bn',
+        'da',
         'es',
         'fa',
         'fil',
         'fr',
         'de',
         'el',
+        'he',
+        'hi',
         'ht',
         'hu',
         'id',
@@ -150,9 +158,11 @@ class DemoLocalizationsDelegate
         'ru',
         'sv',
         'ta',
+        'te',
         'tr',
         'uk',
-        'vi'
+        'vi',
+        'zh'
       ].contains(locale.languageCode);
 
   @override
@@ -171,11 +181,11 @@ class MyUpgraderMessages extends UpgraderMessages {
   @override
   String get buttonTitleIgnore => 'My Ignore 1';
 
-  MyUpgraderMessages({String code}) : super(code: code);
+  MyUpgraderMessages({String? code}) : super(code: code);
 
   /// Override the message function to provide your own language localization.
   @override
-  String message(UpgraderMessage messageKey) {
+  String? message(UpgraderMessage messageKey) {
     if (languageCode == 'es') {
       switch (messageKey) {
         case UpgraderMessage.body:

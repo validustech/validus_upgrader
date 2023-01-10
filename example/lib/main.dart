@@ -20,27 +20,17 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key key}) : super(key: key);
+  const MyApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Upgrader Example',
-      home: Scaffold(
-          appBar: AppBar(title: Text('Upgrader Example')),
-          body: UpgradeAlert(
-            upgrader: Upgrader(
-              durationUntilAlertAgain: const Duration(seconds: 0),
-              dialogStyle: UpgradeDialogStyle.cupertino,
-              validusVersionUrl:
-                  "https://run.mocky.io/v3/16e473e6-3923-45a7-b630-5422a107e3db",
-              onUpdate: (force) {
-                print('is force update $force');
-                return true;
-              },
-            ),
-            child: Center(child: Text('Checking...')),
-          )),
+      home: UpgradeAlert(
+          child: Scaffold(
+        appBar: AppBar(title: Text('Upgrader Example')),
+        body: Center(child: Text('Checking...')),
+      )),
     );
   }
 }

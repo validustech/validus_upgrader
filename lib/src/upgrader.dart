@@ -134,8 +134,23 @@ class Upgrader {
   /// The target operating system.
   final String operatingSystem = UpgradeIO.operatingSystem;
 
-  /// AWS url
-  String? validusVersionUrl;
+  /// Validus's customization
+  /// This is the minimum version that our app supports.
+  /// Use the same value specified in versionStore to force the user to update their app.
+  /// Users who are on app version below this version will receive a force-update prompt.
+  String? versionMin;
+
+  /// Validus's customization
+  /// This is the current version of our app in the app stores. Update this value for each release.
+  String? versionStore;
+
+  /// Validus's customization
+  /// The iOS App Store's Url
+  String? appStoreUrl;
+
+  /// Validus's customization
+  /// The Android Play Store's Url
+  String? playStoreUrl;
 
   /// Show/hide promt message line
   bool? showPromptMessageLine;
@@ -180,9 +195,12 @@ class Upgrader {
     this.languageCode,
     this.minAppVersion,
     this.dialogStyle = UpgradeDialogStyle.material,
-    this.validusVersionUrl,
     this.showPromptMessageLine,
     TargetPlatform? platform,
+    this.versionMin,
+    this.versionStore,
+    this.appStoreUrl,
+    this.playStoreUrl,
   })  : client = client ?? http.Client(),
         messages = messages ?? UpgraderMessages(),
         platform = platform ?? defaultTargetPlatform {
@@ -292,21 +310,16 @@ class Upgrader {
       }
 
       // get iOS version from AWS.
-      if (platform == TargetPlatform.iOS && validusVersionUrl != null) {
-        final api = ValidusSearchAPI();
-        api.client = client;
-        final response = await (api.lookupByAws(validusVersionUrl!));
-        if (response != null) {
-          _appStoreVersion ??= ValidusVersionResult.version(response);
-          _appStoreListingURL ??=
-              ValidusVersionResult.appStoreListingURL(response);
-          final mav = ValidusVersionResult.minAppVersion(response);
-          if (mav != null) {
-            minAppVersion = mav.toString();
-            if (debugLogging) {
-              print('upgrader: RemoteConfig.versionMin: $minAppVersion');
-            }
-          }
+      if (versionMin != null &&
+          versionStore != null &&
+          appStoreUrl != null &&
+          playStoreUrl != null) {
+        _appStoreVersion = versionStore;
+        _appStoreListingURL ??=
+            platform == TargetPlatform.iOS ? appStoreUrl : playStoreUrl;
+        minAppVersion = versionMin;
+        if (debugLogging) {
+          print('upgrader: RemoteConfig.versionMin: $minAppVersion');
         }
       }
     }
